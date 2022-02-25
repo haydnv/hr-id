@@ -9,3 +9,5 @@ readme = "README.md"
 repository = "https://github.com/haydnv/tinychain.git"
 
 [dependencies]
+safecast = "0.1"
+regex = "1.5"
