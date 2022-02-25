@@ -1,0 +1,11 @@
+[package]
+name = "hr-id"
+version = "0.1.0"
+authors = ["haydn@tinychain.net"]
+edition = "2018"
+description = "A human-readable unique ID which supports Unicode"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/haydnv/tinychain.git"
+
+[dependencies]
