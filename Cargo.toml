@@ -9,13 +9,17 @@ readme = "README.md"
 repository = "https://github.com/haydnv/tinychain.git"
 
 [features]
-all = ["stream", "serde", "uuid"]
+all = ["destream", "hash", "stream", "serde", "uuid"]
+hash = ["async-hash", "hex", "sha2"]
 stream = ["destream", "async-trait"]
 
 [dependencies]
+async-hash = { version = "0.3", optional = true }
 async-trait = { version = "0.1", optional = true }
 destream = { version = "0.5", features = [], optional = true }
+hex = { version = "0.4", optional = true }
 serde = { version = "1.0", features = [], optional = true }
 safecast = "0.1"
+sha2 = { version = "0.10", optional = true }
 regex = "1.5"
 uuid = { version = "0.8", optional = true }

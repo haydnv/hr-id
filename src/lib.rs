@@ -17,14 +17,13 @@ use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
 
-// use async_hash::Hash; // TODO: add 'async-hash' feature flag
 use regex::Regex;
 use safecast::TryCastFrom;
-// use sha2::digest::generic_array::{ArrayLength, GenericArray};
-// use sha2::digest::{Digest, Output};
 
 #[cfg(feature = "destream")]
 mod destream;
+#[cfg(feature = "hash")]
+mod hash;
 #[cfg(feature = "serde")]
 mod serde;
 
@@ -100,14 +99,15 @@ pub struct Id {
 }
 
 impl Id {
-    // Construct an `Id` from a hexadecimal string representation of a SHA-2 hash.
-    // pub fn from_hash<T, U>(hash: GenericArray<T, U>) -> Self
-    //     where
-    //         U: ArrayLength<T>,
-    //         GenericArray<T, U>: AsRef<[u8]>,
-    // {
-    //     hex::encode(hash).parse().expect("hash")
-    // }
+    #[cfg(feature = "hash")]
+    /// Construct an `Id` from a hexadecimal string representation of a SHA-2 hash.
+    pub fn from_hash<T, U>(hash: sha2::digest::generic_array::GenericArray<T, U>) -> Self
+    where
+        U: sha2::digest::generic_array::ArrayLength<T>,
+        sha2::digest::generic_array::GenericArray<T, U>: AsRef<[u8]>,
+    {
+        hex::encode(hash).parse().expect("hash")
+    }
 
     /// Borrows the String underlying this `Id`.
     #[inline]
@@ -144,18 +144,6 @@ impl PartialEq<Id> for &str {
         self == &other.id
     }
 }
-
-// impl<D: Digest> Hash<D> for Id {
-//     fn hash(self) -> Output<D> {
-//         Hash::<D>::hash(self.as_str())
-//     }
-// }
-//
-// impl<'a, D: Digest> Hash<D> for &'a Id {
-//     fn hash(self) -> Output<D> {
-//         Hash::<D>::hash(self.as_str())
-//     }
-// }
 
 impl From<usize> for Id {
     fn from(u: usize) -> Id {
