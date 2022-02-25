@@ -79,12 +79,12 @@ pub const fn label(id: &'static str) -> Label {
     Label { id }
 }
 
-// TODO: enable this behind a feature flag
-// impl From<uuid::Uuid> for Id {
-//     fn from(id: uuid::Uuid) -> Self {
-//         Id { id: id.to_string() }
-//     }
-// }
+#[cfg(feature = "uuid")]
+impl From<uuid::Uuid> for Id {
+    fn from(id: uuid::Uuid) -> Self {
+        Id { id: id.to_string() }
+    }
+}
 
 /// A human-readable `Id`
 ///
