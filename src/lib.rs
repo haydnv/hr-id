@@ -23,6 +23,8 @@ use safecast::TryCastFrom;
 // use sha2::digest::generic_array::{ArrayLength, GenericArray};
 // use sha2::digest::{Digest, Output};
 
+#[cfg(feature = "destream")]
+mod destream;
 #[cfg(feature = "serde")]
 mod serde;
 
