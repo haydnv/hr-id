@@ -9,9 +9,10 @@ readme = "README.md"
 repository = "https://github.com/haydnv/tinychain.git"
 
 [features]
-all = ["uuid"]
+all = ["uuid", "serde"]
 
 [dependencies]
+serde = { version = "1.0", features = [], optional = true }
 safecast = "0.1"
 regex = "1.5"
 uuid = { version = "0.8", optional = true }

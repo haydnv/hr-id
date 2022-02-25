@@ -23,6 +23,9 @@ use safecast::TryCastFrom;
 // use sha2::digest::generic_array::{ArrayLength, GenericArray};
 // use sha2::digest::{Digest, Output};
 
+#[cfg(feature = "serde")]
+mod serde;
+
 #[derive(Clone, Debug)]
 pub struct Error(String);
 
