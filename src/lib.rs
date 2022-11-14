@@ -197,11 +197,11 @@ fn validate_id(id: &str) -> std::result::Result<(), Error> {
         return Err(Error("Id cannot be empty".into()));
     }
 
-    let filtered: &str = &id.chars().filter(|c| *c as u8 > 32).collect::<String>();
-    if filtered != id {
+    let mut invalid_chars = id.chars().filter(|c| (*c as u8) < 32u8);
+    if let Some(invalid) = invalid_chars.next() {
         return Err(Error(format!(
-            "Id {} contains an ASCII control character",
-            id
+            "Id {} contains ASCII control characters {}",
+            id, invalid as u8,
         )));
     }
 
