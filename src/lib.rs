@@ -13,6 +13,7 @@
 //! assert!(Id::from_str("this string has whitespace").is_err());
 //! ```
 
+use std::borrow::Borrow;
 use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -101,10 +102,10 @@ pub struct Id {
 impl Id {
     #[cfg(feature = "hash")]
     /// Construct an `Id` from a hexadecimal string representation of a SHA-2 hash.
-    pub fn from_hash<T, U>(hash: sha2::digest::generic_array::GenericArray<T, U>) -> Self
+    pub fn from_hash<T, U>(hash: async_hash::generic_array::GenericArray<T, U>) -> Self
     where
-        U: sha2::digest::generic_array::ArrayLength<T>,
-        sha2::digest::generic_array::GenericArray<T, U>: AsRef<[u8]>,
+        U: async_hash::generic_array::ArrayLength<T>,
+        async_hash::generic_array::GenericArray<T, U>: AsRef<[u8]>,
     {
         hex::encode(hash).parse().expect("hash")
     }
@@ -118,6 +119,12 @@ impl Id {
     /// Return true if this `Id` begins with the specified string.
     pub fn starts_with(&self, prefix: &str) -> bool {
         self.id.starts_with(prefix)
+    }
+}
+
+impl Borrow<str> for Id {
+    fn borrow(&self) -> &str {
+        &self.id
     }
 }
 
@@ -162,6 +169,7 @@ impl FromStr for Id {
 
     fn from_str(id: &str) -> Result {
         validate_id(id)?;
+
         Ok(Id { id: id.to_string() })
     }
 }
@@ -188,7 +196,7 @@ impl TryCastFrom<Id> for usize {
 
 impl fmt::Display for Id {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.id)
+        f.write_str(&self.id)
     }
 }
 

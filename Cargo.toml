@@ -1,25 +1,24 @@
 [package]
 name = "hr-id"
-version = "0.2.1"
-authors = ["haydn@tinychain.net"]
-edition = "2018"
-description = "A human-readable unique ID which supports Unicode"
+version = "0.3.0"
+authors = ["code@tinychain.net"]
+edition = "2021"
+description = "A human-readable unique ID which supports Unicode, safe for URLs and file paths"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/haydnv/tinychain.git"
 
 [features]
-all = ["destream", "hash", "stream", "serde", "uuid"]
-hash = ["async-hash", "hex", "sha2"]
+all = ["hash", "stream"]
+hash = ["async-hash", "hex"]
 stream = ["destream", "async-trait"]
 
 [dependencies]
-async-hash = { version = "0.3", optional = true }
+async-hash = { version = "0.4", optional = true }
 async-trait = { version = "0.1", optional = true }
-destream = { version = "0.5", features = [], optional = true }
+destream = { version = "0.6", features = [], optional = true }
 hex = { version = "0.4", optional = true }
 serde = { version = "1.0", features = [], optional = true }
-safecast = "0.1"
-sha2 = { version = "0.10", optional = true }
-regex = "1.5"
-uuid = { version = "1.1", optional = true }
+safecast = "~0.1.4"
+regex = "1.7"
+uuid = { version = "1.2", optional = true }
