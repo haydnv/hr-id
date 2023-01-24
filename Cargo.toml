@@ -1,6 +1,6 @@
 [package]
 name = "hr-id"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["code@tinychain.net"]
 edition = "2021"
 description = "A human-readable unique ID which supports Unicode, safe for URLs and file paths"
@@ -9,16 +9,19 @@ readme = "README.md"
 repository = "https://github.com/haydnv/tinychain.git"
 
 [features]
-all = ["hash", "stream"]
+all = ["hash", "stream", "serialize"]
 hash = ["async-hash", "hex"]
+serialize = ["serde"]
 stream = ["destream", "async-trait"]
 
 [dependencies]
 async-hash = { version = "0.4", optional = true }
 async-trait = { version = "0.1", optional = true }
 destream = { version = "0.6", features = [], optional = true }
+get-size = "0.1"
+get-size-derive = "0.1"
 hex = { version = "0.4", optional = true }
 serde = { version = "1.0", features = [], optional = true }
 safecast = "~0.1.4"
 regex = "1.7"
-uuid = { version = "1.2", optional = true }
+uuid = "1.2"

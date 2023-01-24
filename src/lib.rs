@@ -18,8 +18,11 @@ use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
 
+use get_size::GetSize;
+use get_size_derive::*;
 use regex::Regex;
 use safecast::TryCastFrom;
+use uuid::Uuid;
 
 #[cfg(feature = "destream")]
 mod destream;
@@ -94,7 +97,7 @@ impl From<uuid::Uuid> for Id {
 /// A human-readable `Id`
 ///
 /// Must be valid UTF8 and must not contain whitespace or any [`RESERVED_CHARS`]
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, GetSize, Hash, Ord, PartialOrd)]
 pub struct Id {
     id: String,
 }
@@ -149,6 +152,14 @@ impl PartialEq<Label> for Id {
 impl PartialEq<Id> for &str {
     fn eq(&self, other: &Id) -> bool {
         self == &other.id
+    }
+}
+
+impl From<Uuid> for Id {
+    fn from(l: Uuid) -> Id {
+        Self {
+            id: l.to_string(),
+        }
     }
 }
 
