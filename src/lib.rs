@@ -21,8 +21,10 @@
 //! ```
 
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::fmt;
 use std::ops::Deref;
+use std::path::Path;
 use std::str::FromStr;
 
 use derive_more::*;
@@ -120,6 +122,12 @@ impl Id {
     }
 }
 
+impl AsRef<Path> for Id {
+    fn as_ref(&self) -> &Path {
+        self.inner.as_ref()
+    }
+}
+
 #[cfg(feature = "uuid")]
 impl From<uuid::Uuid> for Id {
     fn from(id: uuid::Uuid) -> Self {
@@ -141,15 +149,15 @@ impl Borrow<String> for Id {
     }
 }
 
-impl PartialEq<str> for Id {
-    fn eq(&self, other: &str) -> bool {
-        self.inner == other
+impl PartialEq<String> for Id {
+    fn eq(&self, other: &String) -> bool {
+        &self.inner == other
     }
 }
 
-impl<'a> PartialEq<&'a str> for Id {
-    fn eq(&self, other: &&'a str) -> bool {
-        self.inner == *other
+impl PartialEq<str> for Id {
+    fn eq(&self, other: &str) -> bool {
+        self.inner == other
     }
 }
 
@@ -162,6 +170,18 @@ impl PartialEq<Label> for Id {
 impl PartialEq<Id> for &str {
     fn eq(&self, other: &Id) -> bool {
         self == &other.inner
+    }
+}
+
+impl PartialOrd<String> for Id {
+    fn partial_cmp(&self, other: &String) -> Option<Ordering> {
+        self.inner.partial_cmp(other)
+    }
+}
+
+impl PartialOrd<str> for Id {
+    fn partial_cmp(&self, other: &str) -> Option<Ordering> {
+        self.inner.as_str().partial_cmp(other)
     }
 }
 
