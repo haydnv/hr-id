@@ -161,6 +161,12 @@ impl PartialEq<str> for Id {
     }
 }
 
+impl<'a> PartialEq<&'a str> for Id {
+    fn eq(&self, other: &&'a str) -> bool {
+        self.inner == *other
+    }
+}
+
 impl PartialEq<Label> for Id {
     fn eq(&self, other: &Label) -> bool {
         self.inner == other.id
@@ -182,6 +188,12 @@ impl PartialOrd<String> for Id {
 impl PartialOrd<str> for Id {
     fn partial_cmp(&self, other: &str) -> Option<Ordering> {
         self.inner.as_str().partial_cmp(other)
+    }
+}
+
+impl<'a> PartialOrd<&'a str> for Id {
+    fn partial_cmp(&self, other: &&'a str) -> Option<Ordering> {
+        self.inner.as_str().partial_cmp(*other)
     }
 }
 
