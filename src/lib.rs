@@ -1,4 +1,11 @@
-//! Provides a human-readable [`Id`] and static [`Label`]
+//! A human-readable ID which is safe to use as a component in a [`Path`](`crate::link::Path`)
+//! and supports constant [`Label`]s.
+//!
+//! Features:
+//!  - `hash`: enable support for [`async-hash`](https://docs.rs/async-hash)
+//!  - `serde`: enable support for [`serde`](https://docs.rs/serde)
+//!  - `stream`: enable support for [`destream`](https://docs.rs/destream)
+//!  - `uuid`: enable support for [`uuid`](https://docs.rs/uuid)
 //!
 //! Example:
 //! ```
@@ -18,36 +25,43 @@ use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
 
+use derive_more::*;
 use get_size::GetSize;
 use get_size_derive::*;
 use regex::Regex;
 use safecast::TryCastFrom;
-use uuid::Uuid;
 
-#[cfg(feature = "destream")]
+#[cfg(feature = "stream")]
 mod destream;
 #[cfg(feature = "hash")]
 mod hash;
 #[cfg(feature = "serde")]
 mod serde;
 
-#[derive(Clone, Debug)]
-pub struct Error(String);
-
-impl std::error::Error for Error {}
-
-pub type Result = std::result::Result<Id, Error>;
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
-    }
-}
-
 pub const RESERVED_CHARS: [&str; 21] = [
     "/", "..", "~", "$", "`", "&", "|", "=", "^", "{", "}", "<", ">", "'", "\"", "?", ":", "@",
     "#", "(", ")",
 ];
+
+#[derive(Debug, Display, Error)]
+#[display(fmt = "{}", msg)]
+pub struct ParseError {
+    msg: String,
+}
+
+impl From<String> for ParseError {
+    fn from(msg: String) -> Self {
+        Self { msg }
+    }
+}
+
+impl From<&str> for ParseError {
+    fn from(msg: &str) -> Self {
+        Self {
+            msg: msg.to_string(),
+        }
+    }
+}
 
 /// A static label which implements `Into<Id>`.
 pub struct Label {
@@ -65,7 +79,7 @@ impl Deref for Label {
 impl From<Label> for Id {
     fn from(l: Label) -> Id {
         Id {
-            id: l.id.to_string(),
+            inner: l.id.to_string(),
         }
     }
 }
@@ -87,79 +101,67 @@ pub const fn label(id: &'static str) -> Label {
     Label { id }
 }
 
-#[cfg(feature = "uuid")]
-impl From<uuid::Uuid> for Id {
-    fn from(id: uuid::Uuid) -> Self {
-        Id { id: id.to_string() }
-    }
-}
-
-/// A human-readable `Id`
-///
-/// Must be valid UTF8 and must not contain whitespace or any [`RESERVED_CHARS`]
-#[derive(Clone, Debug, Eq, PartialEq, GetSize, Hash, Ord, PartialOrd)]
+/// A human-readable ID
+#[derive(Clone, Eq, Hash, GetSize, PartialEq, Ord, PartialOrd)]
 pub struct Id {
-    id: String,
+    inner: String,
 }
 
 impl Id {
-    #[cfg(feature = "hash")]
-    /// Construct an `Id` from a hexadecimal string representation of a SHA-2 hash.
-    pub fn from_hash<T, U>(hash: async_hash::generic_array::GenericArray<T, U>) -> Self
-    where
-        U: async_hash::generic_array::ArrayLength<T>,
-        async_hash::generic_array::GenericArray<T, U>: AsRef<[u8]>,
-    {
-        hex::encode(hash).parse().expect("hash")
-    }
-
     /// Borrows the String underlying this `Id`.
     #[inline]
     pub fn as_str(&self) -> &str {
-        self.id.as_str()
+        self.inner.as_str()
     }
 
     /// Return true if this `Id` begins with the specified string.
     pub fn starts_with(&self, prefix: &str) -> bool {
-        self.id.starts_with(prefix)
+        self.inner.starts_with(prefix)
+    }
+}
+
+#[cfg(feature = "uuid")]
+impl From<uuid::Uuid> for Id {
+    fn from(id: uuid::Uuid) -> Self {
+        Self {
+            inner: id.to_string(),
+        }
     }
 }
 
 impl Borrow<str> for Id {
     fn borrow(&self) -> &str {
-        &self.id
+        &self.inner
+    }
+}
+
+impl Borrow<String> for Id {
+    fn borrow(&self) -> &String {
+        &self.inner
     }
 }
 
 impl PartialEq<str> for Id {
     fn eq(&self, other: &str) -> bool {
-        self.id == other
+        self.inner == other
     }
 }
 
 impl<'a> PartialEq<&'a str> for Id {
     fn eq(&self, other: &&'a str) -> bool {
-        self.id == *other
+        self.inner == *other
     }
 }
 
 impl PartialEq<Label> for Id {
     fn eq(&self, other: &Label) -> bool {
-        self.id == other.id
+        self.inner == other.id
     }
 }
 
 impl PartialEq<Id> for &str {
     fn eq(&self, other: &Id) -> bool {
-        self == &other.id
-    }
-}
-
-impl From<Uuid> for Id {
-    fn from(l: Uuid) -> Id {
-        Self {
-            id: l.to_string(),
-        }
+        self == &other.inner
     }
 }
 
@@ -176,12 +178,14 @@ impl From<u64> for Id {
 }
 
 impl FromStr for Id {
-    type Err = Error;
+    type Err = ParseError;
 
-    fn from_str(id: &str) -> Result {
+    fn from_str(id: &str) -> Result<Self, Self::Err> {
         validate_id(id)?;
 
-        Ok(Id { id: id.to_string() })
+        Ok(Id {
+            inner: id.to_string(),
+        })
     }
 }
 
@@ -195,6 +199,12 @@ impl TryCastFrom<String> for Id {
     }
 }
 
+impl From<Id> for String {
+    fn from(id: Id) -> String {
+        id.inner
+    }
+}
+
 impl TryCastFrom<Id> for usize {
     fn can_cast_from(id: &Id) -> bool {
         id.as_str().parse::<usize>().is_ok()
@@ -205,39 +215,40 @@ impl TryCastFrom<Id> for usize {
     }
 }
 
-impl fmt::Display for Id {
+impl fmt::Debug for Id {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.id)
+        f.write_str(&self.inner)
     }
 }
 
-fn validate_id(id: &str) -> std::result::Result<(), Error> {
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.inner)
+    }
+}
+
+fn validate_id(id: &str) -> Result<(), ParseError> {
     if id.is_empty() {
-        return Err(Error("Id cannot be empty".into()));
+        return Err("cannot construct an empty Id".into());
     }
 
     let mut invalid_chars = id.chars().filter(|c| (*c as u8) < 32u8);
     if let Some(invalid) = invalid_chars.next() {
-        return Err(Error(format!(
+        return Err(format!(
             "Id {} contains ASCII control characters {}",
             id, invalid as u8,
-        )));
+        )
+        .into());
     }
 
     for pattern in &RESERVED_CHARS {
         if id.contains(pattern) {
-            return Err(Error(format!(
-                "Id {} contains disallowed pattern {}",
-                id, pattern
-            )));
+            return Err(format!("Id {} contains disallowed pattern {}", id, pattern).into());
         }
     }
 
     if let Some(w) = Regex::new(r"\s").expect("whitespace regex").find(id) {
-        return Err(Error(format!(
-            "Id {} is not allowed to contain whitespace {:?}",
-            id, w
-        )));
+        return Err(format!("Id {} is not allowed to contain whitespace {:?}", id, w).into());
     }
 
     Ok(())
