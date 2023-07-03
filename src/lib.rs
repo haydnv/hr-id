@@ -1,4 +1,4 @@
-//! A human-readable ID which is safe to use as a component in a [`Path`](`crate::link::Path`)
+//! A human-readable ID which is safe to use as a component in a URI path.
 //! and supports constant [`Label`]s.
 //!
 //! Features:
@@ -40,11 +40,13 @@ mod hash;
 #[cfg(feature = "serde")]
 mod serde;
 
+/// A set of prohibited character patterns.
 pub const RESERVED_CHARS: [&str; 21] = [
     "/", "..", "~", "$", "`", "&", "|", "=", "^", "{", "}", "<", ">", "'", "\"", "?", ":", "@",
     "#", "(", ")",
 ];
 
+/// An error encountered while parsing an [`Id`].
 #[derive(Debug, Display, Error)]
 #[display(fmt = "{}", msg)]
 pub struct ParseError {
