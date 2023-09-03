@@ -1,6 +1,6 @@
 [package]
 name = "hr-id"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["code@tinychain.net"]
 edition = "2021"
 description = "A human-readable unique ID which supports Unicode, safe for URLs and file paths"
