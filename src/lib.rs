@@ -23,13 +23,13 @@
 use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::fmt;
+use std::mem::size_of;
 use std::ops::Deref;
-use std::path::Path;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use derive_more::*;
 use get_size::GetSize;
-use get_size_derive::*;
 use regex::Regex;
 use safecast::TryCastFrom;
 
@@ -50,20 +50,18 @@ pub const RESERVED_CHARS: [&str; 21] = [
 #[derive(Debug, Display, Error)]
 #[display(fmt = "{}", msg)]
 pub struct ParseError {
-    msg: String,
+    msg: Arc<str>,
 }
 
 impl From<String> for ParseError {
     fn from(msg: String) -> Self {
-        Self { msg }
+        Self { msg: msg.into() }
     }
 }
 
 impl From<&str> for ParseError {
     fn from(msg: &str) -> Self {
-        Self {
-            msg: msg.to_string(),
-        }
+        Self { msg: msg.into() }
     }
 }
 
@@ -82,9 +80,7 @@ impl Deref for Label {
 
 impl From<Label> for Id {
     fn from(l: Label) -> Id {
-        Id {
-            inner: l.id.to_string(),
-        }
+        Id { inner: l.id.into() }
     }
 }
 
@@ -106,16 +102,16 @@ pub const fn label(id: &'static str) -> Label {
 }
 
 /// A human-readable ID
-#[derive(Clone, Eq, Hash, GetSize, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub struct Id {
-    inner: String,
+    inner: Arc<str>,
 }
 
 impl Id {
     /// Borrows the String underlying this `Id`.
     #[inline]
     pub fn as_str(&self) -> &str {
-        self.inner.as_str()
+        self.inner.as_ref()
     }
 
     /// Return true if this `Id` begins with the specified string.
@@ -124,9 +120,10 @@ impl Id {
     }
 }
 
-impl AsRef<Path> for Id {
-    fn as_ref(&self) -> &Path {
-        self.inner.as_ref()
+impl GetSize for Id {
+    fn get_size(&self) -> usize {
+        // err on the side of caution in case there is only one reference to this Id
+        size_of::<Arc<str>>() + self.inner.as_bytes().len()
     }
 }
 
@@ -134,7 +131,7 @@ impl AsRef<Path> for Id {
 impl From<uuid::Uuid> for Id {
     fn from(id: uuid::Uuid) -> Self {
         Self {
-            inner: id.to_string(),
+            inner: id.to_string().into(),
         }
     }
 }
@@ -145,57 +142,51 @@ impl Borrow<str> for Id {
     }
 }
 
-impl Borrow<String> for Id {
-    fn borrow(&self) -> &String {
-        &self.inner
-    }
-}
-
 impl PartialEq<String> for Id {
     fn eq(&self, other: &String) -> bool {
-        &self.inner == other
+        self.inner.as_ref() == other.as_str()
     }
 }
 
 impl PartialEq<str> for Id {
     fn eq(&self, other: &str) -> bool {
-        self.inner == other
+        self.inner.as_ref() == other
     }
 }
 
 impl<'a> PartialEq<&'a str> for Id {
     fn eq(&self, other: &&'a str) -> bool {
-        self.inner == *other
+        self.inner.as_ref() == *other
     }
 }
 
 impl PartialEq<Label> for Id {
     fn eq(&self, other: &Label) -> bool {
-        self.inner == other.id
+        self.inner.as_ref() == other.id
     }
 }
 
 impl PartialEq<Id> for &str {
     fn eq(&self, other: &Id) -> bool {
-        self == &other.inner
+        *self == other.inner.as_ref()
     }
 }
 
 impl PartialOrd<String> for Id {
     fn partial_cmp(&self, other: &String) -> Option<Ordering> {
-        self.inner.partial_cmp(other)
+        self.inner.as_ref().partial_cmp(other)
     }
 }
 
 impl PartialOrd<str> for Id {
     fn partial_cmp(&self, other: &str) -> Option<Ordering> {
-        self.inner.as_str().partial_cmp(other)
+        self.inner.as_ref().partial_cmp(other)
     }
 }
 
 impl<'a> PartialOrd<&'a str> for Id {
     fn partial_cmp(&self, other: &&'a str) -> Option<Ordering> {
-        self.inner.as_str().partial_cmp(*other)
+        self.inner.as_ref().partial_cmp(*other)
     }
 }
 
@@ -217,9 +208,7 @@ impl FromStr for Id {
     fn from_str(id: &str) -> Result<Self, Self::Err> {
         validate_id(id)?;
 
-        Ok(Id {
-            inner: id.to_string(),
-        })
+        Ok(Id { inner: id.into() })
     }
 }
 
@@ -230,12 +219,6 @@ impl TryCastFrom<String> for Id {
 
     fn opt_cast_from(id: String) -> Option<Id> {
         id.parse().ok()
-    }
-}
-
-impl From<Id> for String {
-    fn from(id: Id) -> String {
-        id.inner
     }
 }
 
