@@ -108,13 +108,18 @@ pub struct Id {
 }
 
 impl Id {
-    /// Borrows the String underlying this `Id`.
+    /// Borrows the String underlying this [`Id`].
     #[inline]
     pub fn as_str(&self) -> &str {
         self.inner.as_ref()
     }
 
-    /// Return true if this `Id` begins with the specified string.
+    /// Destructure this [`Id`] into its inner `Arc<str>`.
+    pub fn into_inner(self) -> Arc<str> {
+        self.inner
+    }
+
+    /// Return true if this [`Id`] begins with the specified string.
     pub fn starts_with(&self, prefix: &str) -> bool {
         self.inner.starts_with(prefix)
     }
@@ -174,7 +179,7 @@ impl PartialEq<Id> for &str {
 
 impl PartialOrd<String> for Id {
     fn partial_cmp(&self, other: &String) -> Option<Ordering> {
-        self.inner.as_ref().partial_cmp(other)
+        self.inner.as_ref().partial_cmp(other.as_str())
     }
 }
 
