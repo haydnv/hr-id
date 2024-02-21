@@ -66,6 +66,7 @@ impl From<&str> for ParseError {
 }
 
 /// A static label which implements `Into<Id>`.
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Label {
     id: &'static str,
 }
