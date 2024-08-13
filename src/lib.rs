@@ -47,11 +47,13 @@ pub const RESERVED_CHARS: [&str; 21] = [
 ];
 
 /// An error encountered while parsing an [`Id`].
-#[derive(Debug, Display, Error)]
-#[display(fmt = "{}", msg)]
+#[derive(Debug, Display)]
+#[display("{}", msg)]
 pub struct ParseError {
     msg: Arc<str>,
 }
+
+impl std::error::Error for ParseError {}
 
 impl From<String> for ParseError {
     fn from(msg: String) -> Self {
